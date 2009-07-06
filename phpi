@@ -1,0 +1,68 @@
+#!/usr/bin/env php -q
+<?php
+
+class object
+{
+	var $attributes;
+
+	function __construct()
+	{
+		$this->attributes = array();
+	}
+
+	function __get($varname)
+	{
+		return $this->attributes[$varname];
+	}
+	
+	function __set($varname, $newval)
+	{
+		$this->attributes[$varname] = $newval;
+	}
+
+	function __call($method, $args)
+	{
+		switch ($method)
+		{
+			case 'get':
+				$m = array();
+				foreach ($args as $value)
+				{
+					$m[$value] = $this->attributes[$value];
+				}
+				return $m;
+				break;
+			default:
+				return $this->attributes[$method];
+		}
+	}
+}
+
+function handle_error($errno, $errstr, $errfile, $errline)
+{
+	echo "ERROR $errno: $errstr\n";
+	echo "    -> $errfile:$errline\n";
+}
+
+set_error_handler('handle_error');
+
+$item = new object;
+$killflag = false;
+$_SERVER['HTTP_USER_AGENT'] = 'phpi';
+echo basename($_SERVER['PHP_SELF']) . '!' . get_current_user() . '$ ';
+while ($killflag == false)
+{
+	if ($std = fgets(STDIN))
+	{
+		$std = trim(str_replace("\n", '', $std));
+		if ($std == 'die')
+			$killflag = true;
+		else
+		{
+			eval($std . ';');
+			echo basename($_SERVER['PHP_SELF']) . '!' . get_current_user() . '$ ';
+		}
+	}
+}
+
+?>

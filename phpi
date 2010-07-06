@@ -1,6 +1,32 @@
 #!/usr/bin/env php -q
 <?php
 
+if (function_exists('readline'))
+{
+	$readline_func = 'readline';
+	$history_func = 'readline_add_history';
+}
+else
+{
+	function read_line($prompt)
+	{
+		echo "$prompt ";
+		if (feof(STDIN))
+			return "die";
+		return rtrim(fgets(STDIN));
+	}
+
+	function add_history($line)
+	{
+		return false;
+	}
+
+	fprintf(STDERR, "warning: readline not available\n");
+
+	$readline_func = 'read_line';
+	$history_func = 'add_history';
+}
+
 class object
 {
 	var $attributes;
@@ -49,18 +75,17 @@ set_error_handler('handle_error');
 $item = new object;
 $killflag = false;
 $_SERVER['HTTP_USER_AGENT'] = 'phpi';
-echo basename($_SERVER['PHP_SELF']) . '!' . get_current_user() . '$ ';
+$prompt = basename($_SERVER['PHP_SELF']) . '!' . get_current_user() . '$';
 while ($killflag == false)
 {
-	if ($std = fgets(STDIN))
+	if ($std = $readline_func($prompt))
 	{
-		$std = trim(str_replace("\n", '', $std));
 		if ($std == 'die')
 			$killflag = true;
 		else
 		{
+			$history_func($std);
 			eval($std . ';');
-			echo basename($_SERVER['PHP_SELF']) . '!' . get_current_user() . '$ ';
 		}
 	}
 }
